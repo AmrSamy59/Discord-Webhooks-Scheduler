@@ -18,11 +18,16 @@ section {
 section#main {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   width: 30%;
 }
 section#preview, section#logs {
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-left: rgb(41, 43, 47) 1px solid;
 }
 section#logs {

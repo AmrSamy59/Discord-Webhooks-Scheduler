@@ -1,0 +1,22 @@
+#logs {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.log {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: rgb(41, 43, 47);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+.log-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 100%;
+    word-break: break-all;
+}

@@ -50,6 +50,7 @@ const MainSection = () => {
             console.error('Invalid Webhook URL 2');
         });
         return () => controller.abort
+        // eslint-disable-next-line
     }, [webhook]);
 
     const onNameChange = (e) => {
@@ -77,6 +78,7 @@ const MainSection = () => {
             setFileKey(fileKey + 1);
             setFile(undefined);
         }
+        // eslint-disable-next-line
     }, []);
 
     const [fileKey, setFileKey] = useState(0);
