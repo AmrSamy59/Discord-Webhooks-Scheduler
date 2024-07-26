@@ -69,6 +69,7 @@ a:hover {
 }
 .msgFile {
   max-width: 80%;
+  border-radius: 10px;
 }
 div.msgFile {
   display: flex;
@@ -76,7 +77,6 @@ div.msgFile {
   background-color: rgb(43, 45, 49);
   width: 80%;
   height: 50px;
-  border-radius: 10px;
   align-items: center;
   padding: 10px;
   text-align: left;
