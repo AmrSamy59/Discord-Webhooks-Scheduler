@@ -6,10 +6,10 @@ import { Context } from '../App';
 import toast from 'react-hot-toast';
 
 const MainSection = () => {
-    const {userName, setUserName, avatarURL, 
+    const { userName, setUserName, avatarURL, 
         setAvatarURL, content, setContent, 
         embeds, setEmbeds, defaultAvatar,
-        defaultUser} = useContext(Context);
+        defaultUser, file, setFile } = useContext(Context);
     
     const [webhook, setWebhook] = useState('');
     const [fetchedName, setFetchedName] = useState(null);
@@ -68,6 +68,27 @@ const MainSection = () => {
         setAvatarURL(defaultAvatar);
     }
 
+    const [fileKey, setFileKey] = useState(0);
+
+    const onFileChange = (e) => {
+        if(e.target.files[0].size > 25000000)
+        {
+            e.preventDefault();
+            toast('File size too large', {icon: '❌'});
+            e.target.value = null;
+            setFileKey(fileKey + 1);
+            setFile(undefined);
+            return;
+        }
+        setFile(e.target.files[0]);
+        console.log(e.target.files[0]);
+    }
+
+    const clearFile = () => {
+        setFile(undefined);
+        setFileKey(fileKey + 1);
+    }
+
     
     const addEmbed = () => {
         setEmbeds([...embeds, {
@@ -116,26 +137,39 @@ const MainSection = () => {
             return _embeds.push(_embed);
         });
         console.log(JSON.stringify(_embeds));
-        fetch(webhook, {
+        let formData = new FormData();
+        formData.append('payload_json', JSON.stringify({
+            content: content,
+            username: userName,
+            avatar_url: avatarURL,
+            embeds: _embeds
+        }));
+        if(file)
+            formData.append('file[0]', file, file.name);
+
+        fetch(webhook + "?wait=true", {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                content: content,
-                username: userName,
-                avatar_url: avatarURL,
-                embeds: _embeds
-            })
+            body: formData
         }).then(res => {
             console.log(res);
-            if(res.status !== 204)
+            if(!res.ok)
                 {
                     toast('Failed to send your webhook', {icon: '❌'});
                     console.error('Failed to send webhook');
-                    return;
+                    return res.json();
+
                 }
             toast('Webhook sent successfully', {icon: '✅'});
+            return res.json();
+
+        }).then(data => {
+            console.log("data: ", data);
+            if(data.message)
+            {
+                toast(data.message, {icon: '❌'});
+                return;
+            }
+
         })
         .catch(err => {
             toast('Failed to send your webhook', {icon: '❌'});
@@ -154,7 +188,7 @@ const MainSection = () => {
                 <button className='green' onClick={sendWebhook}>Send Now</button>
             </div>
             <hr />
-            <p>Set Time</p>
+            <p>Set Time <span className="smol">in Timezone UTC+0</span></p>
             <div className="row">
                 <input type='datetime-local' />
             </div>
@@ -179,8 +213,8 @@ const MainSection = () => {
             <hr />
             <p>Add File <span className='smol'><i>Max 25MB</i></span></p>
             <div className="row">
-                <input type='file' />
-                <button>Upload</button>
+                <input type='file' onChange={onFileChange} key={fileKey} />
+                <button className='red' onClick={clearFile}>Clear</button>
             </div>
             <hr />
             <p>Embeds</p>

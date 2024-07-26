@@ -15,14 +15,14 @@ function App() {
   const [content, setContent] = useState('Hi there!');
 
   const [embeds, setEmbeds] = useState([]);
-  const [files, setFiles] = useState([]);
+  const [file, setFile] = useState(undefined);
 
   
   return (
     <div className="App">
       <Context.Provider value={{userName, setUserName, avatarURL, 
         setAvatarURL, content, setContent, embeds, setEmbeds, 
-        files, setFiles, defaultAvatar, defaultUser}}>
+        file, setFile, defaultAvatar, defaultUser}}>
           <Toaster
             position="top-center"
             reverseOrder={false}
