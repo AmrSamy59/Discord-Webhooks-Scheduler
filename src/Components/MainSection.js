@@ -16,7 +16,8 @@ const MainSection = () => {
     const [fetchedAvatar, setFetchedAvatar] = useState(null);
 
     useEffect(() => {
-        fetch(webhook).then(res => {
+        const controller = new AbortController();
+        fetch(webhook, { signal: controller.signal }).then(res => {
             if(res.status !== 200)
                 console.error('Invalid Webhook URL');
             return res.json();
@@ -48,6 +49,7 @@ const MainSection = () => {
             setFetchedName(null);
             console.error('Invalid Webhook URL 2');
         });
+        return () => controller.abort
     }, [webhook]);
 
     const onNameChange = (e) => {
