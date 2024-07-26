@@ -67,3 +67,19 @@ a:hover {
   overflow-wrap: break-word;
   line-height: 1.375;
 }
+.msgFile {
+  max-width: 80%;
+}
+div.msgFile {
+  display: flex;
+  flex-direction: row;
+  background-color: rgb(43, 45, 49);
+  width: 80%;
+  height: 50px;
+  border-radius: 10px;
+  align-items: center;
+  padding: 10px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}

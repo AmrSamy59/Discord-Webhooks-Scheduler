@@ -7,7 +7,8 @@ import { Context } from '../App';
 import Embed from './Embed';
 const PreviewSection = () => {
     const [time, setTime] = useState(new Date());
-    const {userName, avatarURL, content, embeds} = useContext(Context);
+    const {userName, avatarURL, content, embeds, file} = useContext(Context);
+    const imageTypes = ['image/gif', 'image/jpeg', 'image/png'];
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -29,6 +30,11 @@ const PreviewSection = () => {
             <div id="messageContent">
                 <Markdown>{content}</Markdown>
             </div>
+            {
+                file && (imageTypes.includes(file['type']) ? <img src={URL.createObjectURL(file)}alt="Attachment" className='msgFile' />
+                : <div className='msgFile'><a href={URL.createObjectURL(file)} >{file.name}</a></div>
+            ) 
+            }
             {
                 embeds && embeds.map((embed, index) => {
                     return (

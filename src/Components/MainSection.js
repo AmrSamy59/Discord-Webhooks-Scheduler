@@ -68,6 +68,15 @@ const MainSection = () => {
         setAvatarURL(defaultAvatar);
     }
 
+    useEffect(() => {
+        setFileKey(fileKey + 1);
+        setFile(undefined);
+        return () => {
+            setFileKey(fileKey + 1);
+            setFile(undefined);
+        }
+    }, []);
+
     const [fileKey, setFileKey] = useState(0);
 
     const onFileChange = (e) => {
