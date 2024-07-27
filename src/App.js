@@ -24,7 +24,7 @@ function App() {
   const [webhooks, setWebhooks] = useState([]);
   const [needFetch, setNeedFetch] = useState(0);
 
-  const userId = 271026539007574018; // Replace this with the actual user ID
+  const userId = 123; // Replace this with the actual user ID
 
   useEffect(() => {
       const fetchWebhooks = async () => {

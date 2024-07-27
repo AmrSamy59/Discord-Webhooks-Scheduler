@@ -1,5 +1,4 @@
-
-const API_URL = 'http://localhost:3001'; // Adjust this if your backend is hosted elsewhere
+import { API_URL } from './config';
 
 export const getWebhooksForUser = async (userId) => {
     const response = await fetch(`${API_URL}/schedule/${userId}`);

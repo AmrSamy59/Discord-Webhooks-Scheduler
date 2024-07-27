@@ -103,7 +103,6 @@ const MainSection = () => {
             return;
         }
         setFile(e.target.files[0]);
-        console.log(e.target.files[0]);
     }
 
     const clearFile = () => {
@@ -168,7 +167,6 @@ const MainSection = () => {
             }
             return _embeds.push(_embed);
         });
-        console.log(JSON.stringify(_embeds));
         let formData = new FormData();
         formData.append('payload_json', JSON.stringify({
             content: content,
@@ -179,11 +177,10 @@ const MainSection = () => {
         if(file)
             formData.append('file[0]', file, file.name);
 
-        fetch(webhook + "?wait=true", {
+        fetch(webhook, {
             method: 'POST',
             body: formData
         }).then(res => {
-            console.log(res);
             if(!res.ok)
                 {
                     toast('Failed to send your webhook', {icon: '❌'});
@@ -195,7 +192,6 @@ const MainSection = () => {
             return res.json();
 
         }).then(data => {
-            console.log("data: ", data);
             if(data.message)
             {
                 toast(data.message, {icon: '❌'});
@@ -235,10 +231,8 @@ const MainSection = () => {
             toast('Files cannot be scheduled', {icon: '❌'});
             return;
         }
-        console.log('Scheduling webhook');
-        console.log(schedTime);
         addWebhook({
-            user_id: 271026539007574018,
+            user_id: 123,
             time: schedTime,
             webhook_url: webhook,
             message: {
@@ -249,7 +243,6 @@ const MainSection = () => {
                 file: file
             }
         }).then(data => {
-            console.log(data);
             if(data.user_id) {
                 fetchWebhooks();
                 toast('Webhook scheduled successfully', {icon: '✅'});
@@ -304,7 +297,6 @@ const MainSection = () => {
             <div className="col">
                 {
                     embeds.map((embed, index) => {
-                        console.log(embed);
                         return <EmbedForm embed={embed} index={index} key={index} />
                     })
                 }
