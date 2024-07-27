@@ -1,27 +1,25 @@
 import Log from './Log';
 import './Logs.css';
+import { useContext } from 'react';
+import { Context } from '../App';
+
 
 const LogsSection = () => {
-    const messages = [
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-        {title: 'Webhook Sent', timestamp: new Date().toLocaleString(), message: {content: 'Webhook sent successfully', embeds: [], files: []}},
-    ]
+    const { webhooks } = useContext(Context);
+
+   
+
     return (
         <div>
             <h2>Logs</h2>
             <div id="logs">
                 {
-                    messages.map((message, index) => {
+                   webhooks.map((webhook, index) => {
+                    //console.log(webhook);
                         return (
-                            <Log log={message} key={index} />
+                            <>
+                            <Log log={webhook} key={webhook.time}/>
+                            </>
                         )
                     })
                 }

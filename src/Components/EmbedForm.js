@@ -1,6 +1,7 @@
 import HiddenContent from "./HiddenContent";
 import { useContext } from 'react';
 import { Context } from '../App';
+import { getTimeZone } from '../Utils';
 
 const EmbedForm = ({ embed, index }) => {
 
@@ -125,7 +126,7 @@ const EmbedForm = ({ embed, index }) => {
                 <div className="row">
                     <input type='text' placeholder='Footer Icon' value={embed.footer.icon} onChange={(e) => editEmbed(index, 'footer', e.target.value, 'icon_url')} />
                 </div>
-                <p>Timestamp <span className="smol">in Timezone UTC+0</span></p>
+                <p>Timestamp <span className="smol">in Timezone {getTimeZone()}</span></p>
                 <div className="row">
                     <input type='datetime-local' placeholder='Timestamp' value={embed.timestamp} onChange={(e) => editEmbed(index, 'timestamp', e.target.value)} />
                 </div>

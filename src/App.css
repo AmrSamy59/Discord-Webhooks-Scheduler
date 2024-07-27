@@ -114,6 +114,7 @@ p {
 
 input[type="file"] {
   display: inline-block;
+  width: 70%;
   padding: 10px;
   margin: 10px;
   border: none;

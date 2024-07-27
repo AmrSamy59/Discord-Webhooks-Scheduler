@@ -4,16 +4,20 @@ import EmbedForm from './EmbedForm';
 import { useContext } from 'react';
 import { Context } from '../App';
 import toast from 'react-hot-toast';
+import { addWebhook } from '../db';
+import { getTimeZone } from '../Utils';
 
 const MainSection = () => {
     const { userName, setUserName, avatarURL, 
         setAvatarURL, content, setContent, 
         embeds, setEmbeds, defaultAvatar,
-        defaultUser, file, setFile } = useContext(Context);
+        defaultUser, file, setFile,
+        fetchWebhooks, webhook, setWebhook } = useContext(Context);
     
-    const [webhook, setWebhook] = useState('');
+    const [isValidWebhook, setIsValidWebhook] = useState(false);
     const [fetchedName, setFetchedName] = useState(null);
     const [fetchedAvatar, setFetchedAvatar] = useState(null);
+    const [schedTime, setSchedTime] = useState(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -41,12 +45,16 @@ const MainSection = () => {
                     setUserName('');
                     setFetchedName('');
                 }
+            if(data.id) {
+                setIsValidWebhook(true);
+            }
         })
         .catch(err => {
             setAvatarURL(defaultAvatar);
             setUserName(defaultUser);
             setFetchedAvatar(null);
             setFetchedName(null);
+            setIsValidWebhook(false);
             console.error('Invalid Webhook URL 2');
         });
         return () => controller.abort
@@ -70,6 +78,7 @@ const MainSection = () => {
       else
         setAvatarURL(defaultAvatar);
     }
+
 
     useEffect(() => {
         setFileKey(fileKey + 1);
@@ -131,6 +140,16 @@ const MainSection = () => {
     }
 
     const sendWebhook = () => {
+        if(!isValidWebhook)
+        {
+            toast('Invalid Webhook URL', {icon: '❌'});
+            return;
+        }
+        if(content.trim().length === 0 && embeds.length === 0)
+            {
+                toast('Please add some content or embeds', {icon: '❌'});
+                return;
+            }
         const _embeds = []
         embeds.map(embed => {
             let _embed = embed;
@@ -190,20 +209,71 @@ const MainSection = () => {
         }) 
     }
     
-    
+    const scheduleWebhook = () => {
+        if(!isValidWebhook)
+            {
+                toast('Invalid Webhook URL', {icon: '❌'});
+                return;
+            }
+        if(!schedTime)
+        {
+            toast('Please set a time', {icon: '❌'});
+            return;
+        }
+        const now = new Date();
+        if(schedTime <= now)
+        {
+            toast('Please set a time in the future', {icon: '❌'});
+            return;
+        }
+        if(content.trim().length === 0 && embeds.length === 0)
+        {
+            toast('Please add some content or embeds', {icon: '❌'});
+            return;
+        }
+        if(file) {
+            toast('Files cannot be scheduled', {icon: '❌'});
+            return;
+        }
+        console.log('Scheduling webhook');
+        console.log(schedTime);
+        addWebhook({
+            user_id: 271026539007574018,
+            time: schedTime,
+            webhook_url: webhook,
+            message: {
+                content: content,
+                username: userName,
+                avatar_url: avatarURL,
+                embeds: embeds,
+                file: file
+            }
+        }).then(data => {
+            console.log(data);
+            if(data.user_id) {
+                fetchWebhooks();
+                toast('Webhook scheduled successfully', {icon: '✅'});
+            }
+            else
+                toast('Failed to schedule webhook', {icon: '❌'});
+        })
+        .catch(err => {
+            console.error(err);
+        })
+    }
     return (
         <div>
             <h2>Schedule a webhook</h2>
             <p>Webhook URL</p>
             <div className="row">
                 <input type='text' placeholder='Webhook URL' value={webhook} onChange={e => setWebhook(e.target.value)} />
-                <button>Schedule</button>
+                <button onClick={scheduleWebhook}>Schedule</button>
                 <button className='green' onClick={sendWebhook}>Send Now</button>
             </div>
             <hr />
-            <p>Set Time <span className="smol">in Timezone UTC+0</span></p>
+            <p>Set Time <span className="smol">in Timezone {getTimeZone()}</span></p>
             <div className="row">
-                <input type='datetime-local' />
+                <input type='datetime-local' onChange={(e) => setSchedTime((new Date(e.target.value)))} />
             </div>
             <hr />
             <p>Content <span className='smol'><i>{content.length}/2000</i></span></p>
