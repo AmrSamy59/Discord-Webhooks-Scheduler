@@ -13,8 +13,8 @@
             "dest": "index.js"
         }
     ],
-    "cron": {
+    "crons": [{
         "schedule": "* * * * *",
-        "command": "cron.js"
-    }
+        "path": "cron.js"
+    }]
 }
