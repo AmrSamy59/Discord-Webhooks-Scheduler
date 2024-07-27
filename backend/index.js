@@ -63,7 +63,30 @@ app.post('/schedule', async (req, res) => {
     }
   });
 
-  cron.schedule('* * * * *', async () => {
+  app.get('/cron', async (req, res) => {
+    try {
+      const now = new Date();
+  
+      const result = await pool.query('SELECT * FROM webhooks WHERE time <= $1', [now]);
+      console.log('result', result.rows);
+  
+      result.rows.forEach(async (webhook) => {
+        try {
+          await axios.post(webhook.webhook_url, webhook.message);
+          await pool.query('DELETE FROM webhooks WHERE id = $1', [webhook.id]);
+          console.log(`Webhook sent and removed: ${webhook.id}`);
+        } catch (err) {
+          console.error(`Failed to send webhook: ${webhook.id}`, err.message);
+        }
+      });
+      res.status(200).json({ message: 'Cron job executed' });
+    } catch (err) {
+      console.error('Error fetching scheduled webhooks', err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /*cron.schedule('* * * * *', async () => {
     try {
       const now = new Date();
   
@@ -83,7 +106,7 @@ app.post('/schedule', async (req, res) => {
       console.error('Error fetching scheduled webhooks', err.message);
     }
   });
-  
+  */
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
