@@ -12,5 +12,9 @@
             "src": "/(.*)",
             "dest": "index.js"
         }
-    ]
+    ],
+    "cron": {
+        "schedule": "* * * * *",
+        "command": "cron.js"
+    }
 }
