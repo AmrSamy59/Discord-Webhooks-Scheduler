@@ -18,7 +18,7 @@ const LogsSection = () => {
                     //console.log(webhook);
                         return (
                             <>
-                            <Log log={webhook} key={webhook.time}/>
+                            <Log log={webhook} key={toString(webhook.time) + webhook.id}/>
                             </>
                         )
                     })
