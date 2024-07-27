@@ -1,1 +1,1 @@
-export const API_URL = 'http://localhost:3001'; // Adjust this if your backend is hosted elsewhere
+export const API_URL = 'https://discord-webhooks-scheduler-backend.vercel.app';
