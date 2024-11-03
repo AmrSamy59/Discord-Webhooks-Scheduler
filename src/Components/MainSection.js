@@ -257,8 +257,8 @@ const MainSection = () => {
                 username: userName,
                 avatar_url: avatarURL,
                 embeds: embeds,
-                fileUrl: fileUrl
-            }
+            },
+            fileUrl: fileUrl
         }).then(data => {
             if(data.user_id) {
                 fetchWebhooks();
