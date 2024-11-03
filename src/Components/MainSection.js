@@ -5,7 +5,7 @@ import { useContext } from 'react';
 import { Context } from '../App';
 import toast from 'react-hot-toast';
 import { addWebhook } from '../db';
-import { getTimeZone } from '../Utils';
+import { getTimeZone, uploadFile } from '../Utils';
 
 const MainSection = () => {
     const { userName, setUserName, avatarURL, 
@@ -205,7 +205,7 @@ const MainSection = () => {
         }) 
     }
     
-    const scheduleWebhook = () => {
+    const scheduleWebhook = async () => {
         if(!isValidWebhook)
             {
                 toast('Invalid Webhook URL', {icon: '❌'});
@@ -227,10 +227,27 @@ const MainSection = () => {
             toast('Please add some content or embeds', {icon: '❌'});
             return;
         }
-        if(file) {
-            toast('Files cannot be scheduled', {icon: '❌'});
-            return;
+        let fileUrl = null;
+        if (file) {
+            try{
+                if(file.size > 25000000)
+                {
+                    toast('File size too large', {icon: '❌'});
+                    return;
+                }
+                toast('Uploading file...', {icon: '📤'});
+                fileUrl = await uploadFile(file);
+            }
+            catch(err) {
+                console.error(err);
+                toast('Failed to upload file', {icon: '❌'});
+                return;
+            }
         }
+        // if(file) {
+        //     toast('Files cannot be scheduled', {icon: '❌'});
+        //     return;
+        // }
         addWebhook({
             user_id: 123,
             time: schedTime,
@@ -240,7 +257,7 @@ const MainSection = () => {
                 username: userName,
                 avatar_url: avatarURL,
                 embeds: embeds,
-                file: file
+                fileUrl: fileUrl
             }
         }).then(data => {
             if(data.user_id) {
