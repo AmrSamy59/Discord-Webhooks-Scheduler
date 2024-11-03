@@ -48,6 +48,7 @@ app.post('/upload', (req, res) => {
       Key: `${Date.now()}_${file.name}`,
       Body: file.data,
       ContentType: file.mimetype,
+      ACL: 'public-read', // Enable public read access to the file
   };
 
   s3.upload(uploadParams, (err, data) => {
