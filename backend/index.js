@@ -64,7 +64,7 @@ app.post('/schedule', async (req, res) => {
   });
 
 app.post('/check_webhooks', async (req, res) => {
-  let { key } = req.body;
+  let key = req.headers['x-api-key'];
   if (key !== process.env.SECRET_KEY) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
@@ -86,9 +86,10 @@ app.post('/check_webhooks', async (req, res) => {
         console.error(`Failed to send webhook: ${webhook.id}`, err.message);
         failedWebhooks.push(webhook);
       }
-      res.status(200).json({ sentWebhooks, failedWebhooks });
-
     });
+
+    res.status(200).json({ sentWebhooks, failedWebhooks });
+
   } catch (err) {
     console.error('Error fetching scheduled webhooks', err.message);
     res.status(500).json({ error: err.message , sentWebhooks, failedWebhooks });
