@@ -114,8 +114,7 @@ app.post('/schedule', async (req, res) => {
   
       // Select and delete eligible webhooks in one query
       const { rows: webhooks } = await pool.query(
-        `DELETE FROM webhooks WHERE id=${sched_id} RETURNING id, webhook_url, message, file_url`,
-        [now]
+        `DELETE FROM webhooks WHERE id=${sched_id} RETURNING id, webhook_url, message, file_url`
       );
   
       console.log('Fetched and deleted webhooks:', webhooks);
