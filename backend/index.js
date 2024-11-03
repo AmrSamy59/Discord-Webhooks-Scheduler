@@ -64,6 +64,12 @@ app.post('/schedule', async (req, res) => {
   });
 
 app.post('/check_webhooks', async (req, res) => {
+  let { key } = req.body;
+  if (key !== process.env.SECRET_KEY) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  const sentWebhooks = [];
+  const failedWebhooks = [];
   try {
     const now = new Date();
 
@@ -75,15 +81,17 @@ app.post('/check_webhooks', async (req, res) => {
         await axios.post(webhook.webhook_url, webhook.message);
         await pool.query('DELETE FROM webhooks WHERE id = $1', [webhook.id]);
         console.log(`Webhook sent and removed: ${webhook.id}`);
+        sentWebhooks.push(webhook);
       } catch (err) {
         console.error(`Failed to send webhook: ${webhook.id}`, err.message);
+        failedWebhooks.push(webhook);
       }
-      res.status(200).send();
+      res.status(200).json({ sentWebhooks, failedWebhooks });
 
     });
   } catch (err) {
     console.error('Error fetching scheduled webhooks', err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message , sentWebhooks, failedWebhooks });
   }
 
 });
