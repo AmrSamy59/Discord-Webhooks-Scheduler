@@ -95,7 +95,7 @@ app.post('/schedule', async (req, res) => {
     }
   });
 
-  app.get('/test_sched:sched_id', async (req, res) => {
+  app.get('/test_sched/:sched_id', async (req, res) => {
     const { sched_id } = req.params;
     const key = 'gatkim123';
     if (key !== process.env.SECRET_KEY) {
