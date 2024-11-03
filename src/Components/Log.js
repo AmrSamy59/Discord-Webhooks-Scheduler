@@ -35,7 +35,7 @@ const Log = ({ log }) => {
             setTimeLeft('0h 0m 0s will be sent shortly...');
             setTimeout(() => {
                 fetchWebhooks();
-            }, 1000);
+            }, 2000);
         }
         else
         setTimeLeft(`${hrs}h ${mins}m ${secs}s`);
