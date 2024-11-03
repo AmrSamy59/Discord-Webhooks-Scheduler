@@ -1,3 +1,5 @@
+import { API_URL } from './config';
+
 export const getTimeZone = () => {
     const timeOffset = new Date().getTimezoneOffset();
     let sign = timeOffset > 0 ? '-' : '+';
