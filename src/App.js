@@ -27,7 +27,7 @@ function App() {
   const userId = 123; // Replace this with the actual user ID
 
   useEffect(() => {
-      const fetchWebhooks = async () => {
+      const _fetchWebhooks = async () => {
           try {
           const data = await getWebhooksForUser(userId);
           //console.log(data);
@@ -37,7 +37,7 @@ function App() {
           }
       };
 
-      fetchWebhooks();
+      _fetchWebhooks();
   }, [needFetch]);
 
   const fetchWebhooks = () => {
