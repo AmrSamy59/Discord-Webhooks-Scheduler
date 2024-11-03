@@ -63,39 +63,56 @@ app.post('/schedule', async (req, res) => {
     }
   });
 
-app.post('/check_webhooks', async (req, res) => {
-  let key = req.headers['x-api-key'];
-  if (key !== process.env.SECRET_KEY) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  const sentWebhooks = [];
-  const failedWebhooks = [];
-  try {
-    const now = new Date();
-
-    const result = await pool.query('SELECT * FROM webhooks WHERE time <= $1', [now]);
-    console.log('result', result.rows);
-
-    result.rows.forEach(async (webhook) => {
-      try {
-        await axios.post(webhook.webhook_url, webhook.message);
-        await pool.query('DELETE FROM webhooks WHERE id = $1', [webhook.id]);
-        console.log(`Webhook sent and removed: ${webhook.id}`);
-        sentWebhooks.push(webhook);
-      } catch (err) {
-        console.error(`Failed to send webhook: ${webhook.id}`, err.message);
-        failedWebhooks.push(webhook);
-      }
-    });
-
-    res.status(200).json({ sentWebhooks, failedWebhooks });
-
-  } catch (err) {
-    console.error('Error fetching scheduled webhooks', err.message);
-    res.status(500).json({ error: err.message , sentWebhooks, failedWebhooks });
-  }
-
-});
+  app.post('/check_webhooks', async (req, res) => {
+    const key = req.headers['x-api-key'];
+    if (key !== process.env.SECRET_KEY) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+  
+    const sentWebhooks = [];
+    const failedWebhooks = [];
+    
+    try {
+      const now = new Date();
+  
+      // Start transaction
+      await pool.query('BEGIN');
+  
+      // Select and delete eligible webhooks in one query
+      const { rows: webhooks } = await pool.query(
+        'DELETE FROM webhooks WHERE time <= $1 RETURNING id, webhook_url, message',
+        [now]
+      );
+  
+      console.log('Fetched and deleted webhooks:', webhooks);
+  
+      // Process webhooks concurrently
+      await Promise.all(webhooks.map(async (webhook) => {
+        try {
+          await axios.post(webhook.webhook_url, webhook.message);
+          console.log(`Webhook sent successfully: ${webhook.id}`);
+          sentWebhooks.push(webhook);
+        } catch (err) {
+          console.error(`Failed to send webhook: ${webhook.id}`, err.message);
+          failedWebhooks.push(webhook);
+        }
+      }));
+  
+      // Commit transaction
+      await pool.query('COMMIT');
+  
+      res.status(200).json({ sentWebhooks, failedWebhooks });
+  
+    } catch (err) {
+      console.error('Error processing webhooks', err.message);
+  
+      // Rollback transaction in case of error
+      await pool.query('ROLLBACK');
+  
+      res.status(500).json({ error: err.message, sentWebhooks, failedWebhooks });
+    }
+  });
+  
 
 
 app.listen(port, () => {
