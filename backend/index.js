@@ -139,20 +139,16 @@ app.post('/schedule', async (req, res) => {
             formData.append('file[0]', fileBlob, fileName);
           } 
 
-          fetch(webhook.webhook_url, {
+          const response = await fetch(webhook.webhook_url, {
             method: 'POST',
             body: formData,
-          }).then((response) => {
-            if (!response.ok) {
-              throw new Error('Failed to send webhook');
-            }
-            console.log(`Webhook sent successfully: ${webhook.id}`);
-            sentWebhooks.push(webhook);
-          }).catch((err) => {
-            console.error(`Failed to send webhook: ${webhook.id}`, err.message);
-            failedWebhooks.push(webhook);
-          }
-          );
+        });
+    
+        if (!response.ok) {
+            throw new Error('Failed to send webhook');
+        }
+        console.log(`Webhook sent successfully: ${webhook.id}`);
+        sentWebhooks.push(webhook);
         } catch (err) {
           console.error(`Failed to send webhook: ${webhook.id}`, err.message);
           failedWebhooks.push(webhook);
@@ -207,17 +203,27 @@ app.post('/schedule', async (req, res) => {
 
           if (webhook.file_url) {
             const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
-            const fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+            let fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+            // file name is in form: 1630000000000_file_name.ext
+            // get the file name by splitting the string by '_' and removing the first element
+            fileName = fileName.split('_').slice(1).join('_');
+
+            const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
 
             // Append the file to formData
-            formData.append('file[0]', Buffer.from(response.data), fileName);
+            formData.append('file[0]', fileBlob, fileName);
           } 
 
-          await axios.post(webhook.webhook_url, formData, {
-            headers: formData.getHeaders(),
-          });
-          console.log(`Webhook sent successfully: ${webhook.id}`);
-          sentWebhooks.push(webhook);
+          const response = await fetch(webhook.webhook_url, {
+            method: 'POST',
+            body: formData,
+        });
+    
+        if (!response.ok) {
+            throw new Error('Failed to send webhook');
+        }
+        console.log(`Webhook sent successfully: ${webhook.id}`);
+        sentWebhooks.push(webhook);
         } catch (err) {
           console.error(`Failed to send webhook: ${webhook.id}`, err.message);
           failedWebhooks.push(webhook);
