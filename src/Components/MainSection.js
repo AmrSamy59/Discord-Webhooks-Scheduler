@@ -192,7 +192,7 @@ const MainSection = () => {
             return res.json();
 
         }).then(data => {
-            if(data.message)
+            if(data && data.message)
             {
                 toast(data.message, {icon: '❌'});
                 return;
