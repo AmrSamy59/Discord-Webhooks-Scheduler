@@ -128,7 +128,7 @@ app.post('/schedule', async (req, res) => {
 
           if (webhook.file_url) {
             const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
-            const fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+            let fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
             // file name is in form: 1630000000000_file_name.ext
             // get the file name by splitting the string by '_' and removing the first element
             fileName = fileName.split('_').slice(1).join('_');
