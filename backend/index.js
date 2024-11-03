@@ -95,6 +95,72 @@ app.post('/schedule', async (req, res) => {
     }
   });
 
+  app.get('/test_sched:sched_id', async (req, res) => {
+    const { sched_id } = req.params;
+    const key = 'gatkim123';
+    if (key !== process.env.SECRET_KEY) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+  
+    const sentWebhooks = [];
+    const failedWebhooks = [];
+    
+    try {
+      const now = new Date();
+  
+      // Start transaction
+      await pool.query('BEGIN');
+  
+      // Select and delete eligible webhooks in one query
+      const { rows: webhooks } = await pool.query(
+        `DELETE FROM webhooks WHERE id=${sched_id} RETURNING id, webhook_url, message, file_url`,
+        [now]
+      );
+  
+      console.log('Fetched and deleted webhooks:', webhooks);
+  
+      // Process webhooks concurrently
+      await Promise.all(webhooks.map(async (webhook) => {
+        try {
+
+          const formData = new FormData();
+          formData.append('payload_json', JSON.stringify(webhook.message));
+
+          if (webhook.file_url) {
+            const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
+            const fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+
+            // Append the file to formData
+            formData.append('file[0]', Buffer.from(response.data), fileName);
+          } 
+
+          await axios.post(webhook.webhook_url, formData, {
+            headers: formData.getHeaders(),
+          });
+          console.log(`Webhook sent successfully: ${webhook.id}`);
+          sentWebhooks.push(webhook);
+        } catch (err) {
+          console.error(`Failed to send webhook: ${webhook.id}`, err.message);
+          failedWebhooks.push(webhook);
+        }
+      }));
+  
+      // Commit transaction
+      await pool.query('COMMIT');
+  
+      res.status(200).json({ sentWebhooks, failedWebhooks });
+  
+    } catch (err) {
+      console.error('Error processing webhooks', err.message);
+  
+      // Rollback transaction in case of error
+      await pool.query('ROLLBACK');
+  
+      res.status(500).json({ error: err.message, sentWebhooks, failedWebhooks });
+    }
+  });
+  
+
   app.post('/check_webhooks', async (req, res) => {
     const key = req.headers['x-api-key'];
     if (key !== process.env.SECRET_KEY) {
