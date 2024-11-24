@@ -22,7 +22,9 @@ const DiscordAuthPage = ({loading}) => {
           <p className="text-center text-gray-300 mb-6">
             Please authenticate with Discord to continue
           </p>
-          
+          <p className="text-center text-gray-300 mb-6">
+            Note that only authorized users can access this page
+          </p>
           <button 
             onClick={login}
             disabled={loading}

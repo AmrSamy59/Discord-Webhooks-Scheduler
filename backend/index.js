@@ -5,6 +5,8 @@ const axios = require('axios');
 const { Pool } = require('pg');
 const cors = require('cors');
 const session = require('express-session');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 require('dotenv').config();
 
@@ -257,6 +259,7 @@ const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
 
 app.use(cors({ origin: process.env.APP_URL, credentials: true }));
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
+app.use(cookieParser());
 
 app.get('/login', (req, res) => {
   const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;
@@ -284,7 +287,12 @@ app.get('/callback', async (req, res) => {
     const user = userResponse.data;
 
     if (WHITELISTED_IDS.includes(String(user.id))) {
-      req.session.user = user;
+      const token = jwt.sign({ id: user.id, username: user.username }, process.env.SESSION_SECRET, { expiresIn: '1d' });
+      res.cookie('token', token, {
+        httpOnly: true, // Secure cookie
+        secure: false,  // Set to true in production (HTTPS only)
+        maxAge: 24 * 60 * 60 * 1000, // 1 day
+      });
       res.redirect(process.env.APP_URL);
     } else {
       res.status(403).send('You are not authorized.');
@@ -295,12 +303,21 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-app.get('/me', (req, res) => {
-  if (req.session.user && WHITELISTED_IDS.includes(String(req.session.user.id))) {
-    res.json(req.session.user);
-  } else {
-    res.status(401).send('Not authenticated');
-  }
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) return res.status(401).send('Not authenticated');
+
+  jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+    if (err) return res.status(403).send('Invalid token');
+    req.user = decoded;
+    next();
+  });
+};
+
+
+app.get('/me', verifyToken, (req, res) => {
+  res.json(req.user);
 });
 
 app.listen(port, () => {
