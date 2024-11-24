@@ -290,7 +290,8 @@ app.get('/callback', async (req, res) => {
       const token = jwt.sign({ id: user.id, username: user.username }, process.env.SESSION_SECRET, { expiresIn: '1d' });
       res.cookie('token', token, {
         httpOnly: true, // Secure cookie
-        secure: false,  // Set to true in production (HTTPS only)
+        secure: true,  // Set to true in production (HTTPS only)
+        sameSite: 'lax', // Prevent CSRF issues
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
       res.redirect(process.env.APP_URL);

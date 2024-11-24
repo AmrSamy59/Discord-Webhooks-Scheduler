@@ -20,13 +20,13 @@ function App() {
         const response = await fetch(API_URL + '/me', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
-          console.log(data);
+          //console.log(data);
           setUser(data);
         }
         setLoading(false);
 
       } catch (error) {
-        console.error(error);
+        //console.error(error);
         setLoading(false);
       }
     };
