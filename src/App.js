@@ -5,10 +5,35 @@ import LogsSection from './Components/LogsSection';
 import { createContext, useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { getWebhooksForUser } from './db';
+import DiscordAuthPage from './Components/AuthPage';
 
 
 export const Context = createContext(null);
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/me', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          setUser(data);
+        }
+        setLoading(false);
+
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  
   let defaultUser = 'Gat';
   let defaultAvatar = 'https://cdn.discordapp.com/avatars/271026539007574018/15af0dcf2578aef01a5e103457251f51.gif?size=1024';
 
@@ -44,7 +69,9 @@ function App() {
     setNeedFetch(needFetch + 1);
   }
 
-  
+  if (!user) {
+    return <DiscordAuthPage loading={loading} />;
+  }
   return (
     <div className="App">
       <Context.Provider value={{userName, setUserName, avatarURL, 

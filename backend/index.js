@@ -4,6 +4,8 @@ const cron = require('node-cron');
 const axios = require('axios');
 const { Pool } = require('pg');
 const cors = require('cors');
+const session = require('express-session');
+
 require('dotenv').config();
 
 const fileUpload = require('express-fileupload');
@@ -246,6 +248,60 @@ app.post('/schedule', async (req, res) => {
   });
   
 
+
+
+
+////////////// discord auth
+
+const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
+
+app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+app.use(session({ secret: 'your_secret', resave: false, saveUninitialized: true }));
+
+app.get('/login', (req, res) => {
+  const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;
+  res.redirect(authURL);
+});
+
+app.get('/callback', async (req, res) => {
+  const { code } = req.query;
+
+  try {
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: process.env.REDIRECT_URI,
+    }).toString(), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` },
+    });
+
+    const user = userResponse.data;
+
+    if (WHITELISTED_IDS.includes(String(user.id))) {
+      req.session.user = user;
+      res.redirect(process.env.APP_URL);
+    } else {
+      res.status(403).send('You are not authorized.');
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Authentication failed.');
+  }
+});
+
+app.get('/me', (req, res) => {
+  if (req.session.user && WHITELISTED_IDS.includes(String(req.session.user.id))) {
+    res.json(req.session.user);
+  } else {
+    res.status(401).send('Not authenticated');
+  }
+});
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);

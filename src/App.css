@@ -4,6 +4,9 @@
   scrollbar-color: rgb(32, 34, 37) rgb(46, 51, 56);
   scrollbar-width: auto;
 }
+#root {
+  width: 100vw;
+}
 .App, body {
   background-color: rgb(49, 51, 56);
   height: 100vh;
