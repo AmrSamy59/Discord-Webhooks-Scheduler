@@ -255,8 +255,8 @@ app.post('/schedule', async (req, res) => {
 
 const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
 
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
-app.use(session({ secret: 'your_secret', resave: false, saveUninitialized: true }));
+app.use(cors({ origin: process.env.APP_URL, credentials: true }));
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 
 app.get('/login', (req, res) => {
   const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;

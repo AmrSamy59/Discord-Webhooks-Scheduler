@@ -6,6 +6,7 @@ import { createContext, useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { getWebhooksForUser } from './db';
 import DiscordAuthPage from './Components/AuthPage';
+import { API_URL } from './config';
 
 
 export const Context = createContext(null);
@@ -16,7 +17,7 @@ function App() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch('http://localhost:3000/me', { credentials: 'include' });
+        const response = await fetch(API_URL + '/me', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           console.log(data);
