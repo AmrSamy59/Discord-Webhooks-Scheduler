@@ -250,7 +250,7 @@ const MainSection = () => {
         //     return;
         // }
         addWebhook({
-            user_id: user.id,
+            //user_id: user.id,
             time: schedTime,
             webhook_url: webhook,
             message: {
