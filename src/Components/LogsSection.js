@@ -11,7 +11,7 @@ const LogsSection = () => {
 
     return (
         <div>
-            <h2>Logs</h2>
+            <h2>Scheduled Webhooks</h2>
             <div id="logs">
                 {
                    webhooks.map((webhook, index) => {
