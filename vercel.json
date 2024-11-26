@@ -1,9 +1,0 @@
-{
-    "rewrites": [
-      { "source": "/api/(.*)", "destination": "/backend/index.js" }
-    ],
-    "builds": [
-      { "src": "backend/index.js", "use": "@vercel/node" },
-      { "src": "vite.config.js", "use": "@vercel/static-build" }
-    ]
-  }

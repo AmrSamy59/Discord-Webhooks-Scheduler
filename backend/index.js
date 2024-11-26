@@ -291,7 +291,7 @@ app.get('/api/callback', async (req, res) => {
       res.cookie('token', token, {
         httpOnly: true, // Secure cookie
         secure: true,  // Set to true in production (HTTPS only)
-        sameSite: 'lax', // Prevent CSRF issues
+        sameSite: 'None', // Prevent CSRF issues
         maxAge: 24 * 60 * 60 * 1000, // 1 day
       });
       res.redirect(process.env.APP_URL);
