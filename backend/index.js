@@ -41,7 +41,7 @@ pool.connect((err) => {
 });
 
 
-app.post('/upload', (req, res) => {
+app.post('/api/upload', (req, res) => {
   if (!req.files || !req.files.file) {
       return res.status(400).json({ error: 'No file uploaded' });
   }
@@ -62,7 +62,7 @@ app.post('/upload', (req, res) => {
 
 
 // Schedule a new webhook
-app.post('/schedule', async (req, res) => {
+app.post('/api/schedule', async (req, res) => {
     const { user_id, time, webhook_url, message, fileUrl } = req.body;
     try {
       const result = await pool.query(
@@ -76,7 +76,7 @@ app.post('/schedule', async (req, res) => {
   });
   
   // Remove a scheduled webhook
-  app.delete('/schedule/:id', async (req, res) => {
+  app.delete('/api/schedule/:id', async (req, res) => {
     const { id } = req.params;
     try {
       await pool.query('DELETE FROM webhooks WHERE id = $1', [id]);
@@ -87,7 +87,7 @@ app.post('/schedule', async (req, res) => {
   });
   
   // Fetch scheduled webhooks for a user
-  app.get('/schedule/:user_id', async (req, res) => {
+  app.get('/api/schedule/:user_id', async (req, res) => {
     const { user_id } = req.params;
     try {
       const result = await pool.query('SELECT * FROM webhooks WHERE user_id = $1 ORDER BY time ASC', [user_id]);
@@ -99,7 +99,7 @@ app.post('/schedule', async (req, res) => {
     }
   });
 
-  app.get('/test_sched/:sched_id', async (req, res) => {
+  app.get('/api/test_sched/:sched_id', async (req, res) => {
     const { sched_id } = req.params;
     console.log('sched_id', sched_id);
     const key = 'gatkim123';
@@ -132,7 +132,7 @@ app.post('/schedule', async (req, res) => {
 
           if (webhook.file_url) {
             const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
-            let fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+            let fileName = webhook.file_url.split('/api/').pop(); // Extract the file name from the URL
             // file name is in form: 1630000000000_file_name.ext
             // get the file name by splitting the string by '_' and removing the first element
             fileName = fileName.split('_').slice(1).join('_');
@@ -175,7 +175,7 @@ app.post('/schedule', async (req, res) => {
   });
   
 
-  app.post('/check_webhooks', async (req, res) => {
+  app.post('/api/check_webhooks', async (req, res) => {
     const key = req.headers['x-api-key'];
     if (key !== process.env.SECRET_KEY) {
       return res.status(403).json({ error: 'Unauthorized' });
@@ -207,7 +207,7 @@ app.post('/schedule', async (req, res) => {
 
           if (webhook.file_url) {
             const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
-            let fileName = webhook.file_url.split('/').pop(); // Extract the file name from the URL
+            let fileName = webhook.file_url.split('/api/').pop(); // Extract the file name from the URL
             // file name is in form: 1630000000000_file_name.ext
             // get the file name by splitting the string by '_' and removing the first element
             fileName = fileName.split('_').slice(1).join('_');
@@ -261,12 +261,12 @@ app.use(cors({ origin: process.env.APP_URL, credentials: true }));
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 app.use(cookieParser());
 
-app.get('/login', (req, res) => {
+app.get('/api/login', (req, res) => {
   const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;
   res.redirect(authURL);
 });
 
-app.get('/callback', async (req, res) => {
+app.get('/api/callback', async (req, res) => {
   const { code } = req.query;
 
   try {
@@ -317,7 +317,7 @@ const verifyToken = (req, res, next) => {
 };
 
 
-app.get('/me', verifyToken, (req, res) => {
+app.get('/api/me', verifyToken, (req, res) => {
   res.json(req.user);
 });
 
