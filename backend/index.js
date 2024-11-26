@@ -30,6 +30,9 @@ app.use(fileUpload());
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 pool.connect((err) => {
@@ -40,6 +43,154 @@ pool.connect((err) => {
   }
 });
 
+// routes with no authentication
+
+app.post('/api/check_webhooks', async (req, res) => {
+  const key = req.headers['x-api-key'];
+  if (key !== process.env.SECRET_KEY) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const sentWebhooks = [];
+  const failedWebhooks = [];
+  
+  try {
+    const now = new Date();
+
+    // Start transaction
+    await pool.query('BEGIN');
+
+    // Select and delete eligible webhooks in one query
+    const { rows: webhooks } = await pool.query(
+      'DELETE FROM webhooks WHERE time <= $1 RETURNING id, webhook_url, message, file_url',
+      [now]
+    );
+
+    console.log('Fetched and deleted webhooks:', webhooks);
+
+    // Process webhooks concurrently
+    await Promise.all(webhooks.map(async (webhook) => {
+      try {
+
+        const formData = new FormData();
+        formData.append('payload_json', JSON.stringify(webhook.message));
+
+        if (webhook.file_url) {
+          const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
+          let fileName = webhook.file_url.split('/api/').pop(); // Extract the file name from the URL
+          // file name is in form: 1630000000000_file_name.ext
+          // get the file name by splitting the string by '_' and removing the first element
+          fileName = fileName.split('_').slice(1).join('_');
+
+          const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
+
+          // Append the file to formData
+          formData.append('file[0]', fileBlob, fileName);
+        } 
+
+        const response = await fetch(webhook.webhook_url, {
+          method: 'POST',
+          body: formData,
+      });
+  
+      if (!response.ok) {
+          throw new Error('Failed to send webhook');
+      }
+      console.log(`Webhook sent successfully: ${webhook.id}`);
+      sentWebhooks.push(webhook);
+      } catch (err) {
+        console.error(`Failed to send webhook: ${webhook.id}`, err.message);
+        failedWebhooks.push(webhook);
+      }
+    }));
+
+    // Commit transaction
+    await pool.query('COMMIT');
+
+    res.status(200).json({ sentWebhooks, failedWebhooks });
+
+  } catch (err) {
+    console.error('Error processing webhooks', err.message);
+
+    // Rollback transaction in case of error
+    await pool.query('ROLLBACK');
+
+    res.status(500).json({ error: err.message, sentWebhooks, failedWebhooks });
+  }
+});
+
+
+
+
+
+////////////// discord auth
+
+const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
+
+app.use(cors({ origin: process.env.APP_URL, credentials: true }));
+app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
+app.use(cookieParser());
+
+app.get('/api/login', (req, res) => {
+const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;
+res.redirect(authURL);
+});
+
+app.get('/api/callback', async (req, res) => {
+const { code } = req.query;
+
+try {
+  const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+    client_id: process.env.CLIENT_ID,
+    client_secret: process.env.CLIENT_SECRET,
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: process.env.REDIRECT_URI,
+  }).toString(), {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  });
+
+  const userResponse = await axios.get('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` },
+  });
+
+  const user = userResponse.data;
+
+  if (WHITELISTED_IDS.includes(String(user.id))) {
+    const token = jwt.sign({ id: user.id, username: user.username }, process.env.SESSION_SECRET, { expiresIn: '1d' });
+    res.cookie('token', token, {
+      httpOnly: true, // Secure cookie
+      secure: true,  // Set to true in production (HTTPS only)
+      sameSite: 'None', // Prevent CSRF issues
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+    res.redirect(process.env.APP_URL);
+  } else {
+    res.status(403).send('You are not authorized.');
+  }
+} catch (error) {
+  console.error(error);
+  res.status(500).send('Authentication failed.');
+}
+});
+
+
+// Middleware to verify JWT
+const verifyToken = (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) return res.status(401).send('Not authenticated');
+
+  jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
+    if (err) return res.status(403).send('Invalid token');
+    req.user = decoded;
+    next();
+  });
+};
+
+app.use(verifyToken);
+
+// routes with authentication
 
 app.post('/api/upload', (req, res) => {
   if (!req.files || !req.files.file) {
@@ -63,7 +214,8 @@ app.post('/api/upload', (req, res) => {
 
 // Schedule a new webhook
 app.post('/api/schedule', async (req, res) => {
-    const { user_id, time, webhook_url, message, fileUrl } = req.body;
+    const { time, webhook_url, message, fileUrl } = req.body;
+    const user_id = req.user.id;
     try {
       const result = await pool.query(
         'INSERT INTO webhooks (user_id, time, webhook_url, message, file_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
@@ -175,149 +327,8 @@ app.post('/api/schedule', async (req, res) => {
   });
   
 
-  app.post('/api/check_webhooks', async (req, res) => {
-    const key = req.headers['x-api-key'];
-    if (key !== process.env.SECRET_KEY) {
-      return res.status(403).json({ error: 'Unauthorized' });
-    }
-  
-    const sentWebhooks = [];
-    const failedWebhooks = [];
-    
-    try {
-      const now = new Date();
-  
-      // Start transaction
-      await pool.query('BEGIN');
-  
-      // Select and delete eligible webhooks in one query
-      const { rows: webhooks } = await pool.query(
-        'DELETE FROM webhooks WHERE time <= $1 RETURNING id, webhook_url, message, file_url',
-        [now]
-      );
-  
-      console.log('Fetched and deleted webhooks:', webhooks);
-  
-      // Process webhooks concurrently
-      await Promise.all(webhooks.map(async (webhook) => {
-        try {
 
-          const formData = new FormData();
-          formData.append('payload_json', JSON.stringify(webhook.message));
-
-          if (webhook.file_url) {
-            const response  = await axios.get(webhook.file_url, { responseType: 'arraybuffer' });
-            let fileName = webhook.file_url.split('/api/').pop(); // Extract the file name from the URL
-            // file name is in form: 1630000000000_file_name.ext
-            // get the file name by splitting the string by '_' and removing the first element
-            fileName = fileName.split('_').slice(1).join('_');
-
-            const fileBlob = new Blob([response.data], { type: response.headers['content-type'] });
-
-            // Append the file to formData
-            formData.append('file[0]', fileBlob, fileName);
-          } 
-
-          const response = await fetch(webhook.webhook_url, {
-            method: 'POST',
-            body: formData,
-        });
-    
-        if (!response.ok) {
-            throw new Error('Failed to send webhook');
-        }
-        console.log(`Webhook sent successfully: ${webhook.id}`);
-        sentWebhooks.push(webhook);
-        } catch (err) {
-          console.error(`Failed to send webhook: ${webhook.id}`, err.message);
-          failedWebhooks.push(webhook);
-        }
-      }));
-  
-      // Commit transaction
-      await pool.query('COMMIT');
-  
-      res.status(200).json({ sentWebhooks, failedWebhooks });
-  
-    } catch (err) {
-      console.error('Error processing webhooks', err.message);
-  
-      // Rollback transaction in case of error
-      await pool.query('ROLLBACK');
-  
-      res.status(500).json({ error: err.message, sentWebhooks, failedWebhooks });
-    }
-  });
-  
-
-
-
-
-////////////// discord auth
-
-const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
-
-app.use(cors({ origin: process.env.APP_URL, credentials: true }));
-app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
-app.use(cookieParser());
-
-app.get('/api/login', (req, res) => {
-  const authURL = `https://discord.com/api/oauth2/authorize?client_id=${process.env.CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=identify`;
-  res.redirect(authURL);
-});
-
-app.get('/api/callback', async (req, res) => {
-  const { code } = req.query;
-
-  try {
-    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
-      client_id: process.env.CLIENT_ID,
-      client_secret: process.env.CLIENT_SECRET,
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: process.env.REDIRECT_URI,
-    }).toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-
-    const userResponse = await axios.get('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` },
-    });
-
-    const user = userResponse.data;
-
-    if (WHITELISTED_IDS.includes(String(user.id))) {
-      const token = jwt.sign({ id: user.id, username: user.username }, process.env.SESSION_SECRET, { expiresIn: '1d' });
-      res.cookie('token', token, {
-        httpOnly: true, // Secure cookie
-        secure: true,  // Set to true in production (HTTPS only)
-        sameSite: 'None', // Prevent CSRF issues
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      });
-      res.redirect(process.env.APP_URL);
-    } else {
-      res.status(403).send('You are not authorized.');
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Authentication failed.');
-  }
-});
-
-const verifyToken = (req, res, next) => {
-  const token = req.cookies.token;
-
-  if (!token) return res.status(401).send('Not authenticated');
-
-  jwt.verify(token, process.env.SESSION_SECRET, (err, decoded) => {
-    if (err) return res.status(403).send('Invalid token');
-    req.user = decoded;
-    next();
-  });
-};
-
-
-app.get('/api/me', verifyToken, (req, res) => {
+app.get('/api/me', (req, res) => {
   res.json(req.user);
 });
 

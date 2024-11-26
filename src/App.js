@@ -50,12 +50,12 @@ function App() {
   const [webhooks, setWebhooks] = useState([]);
   const [needFetch, setNeedFetch] = useState(0);
 
-  const userId = 123; // Replace this with the actual user ID
+  //const userId = 123; // Replace this with the actual user ID
 
   useEffect(() => {
       const _fetchWebhooks = async () => {
           try {
-          const data = await getWebhooksForUser(userId);
+          const data = await getWebhooksForUser(user.id);
           //console.log(data);
           setWebhooks(data);
           } catch (error) {
@@ -75,7 +75,7 @@ function App() {
   }
   return (
     <div className="App">
-      <Context.Provider value={{userName, setUserName, avatarURL, 
+      <Context.Provider value={{user, userName, setUserName, avatarURL, 
         setAvatarURL, content, setContent, embeds, setEmbeds, 
         file, setFile, defaultAvatar, defaultUser, webhooks, setWebhooks, fetchWebhooks, webhook, setWebhook}}>
           <Toaster

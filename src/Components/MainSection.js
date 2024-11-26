@@ -8,7 +8,7 @@ import { addWebhook } from '../db';
 import { getTimeZone, uploadFile } from '../Utils';
 
 const MainSection = () => {
-    const { userName, setUserName, avatarURL, 
+    const { user, userName, setUserName, avatarURL, 
         setAvatarURL, content, setContent, 
         embeds, setEmbeds, defaultAvatar,
         defaultUser, file, setFile,
@@ -250,7 +250,7 @@ const MainSection = () => {
         //     return;
         // }
         addWebhook({
-            user_id: 123,
+            user_id: user.id,
             time: schedTime,
             webhook_url: webhook,
             message: {
