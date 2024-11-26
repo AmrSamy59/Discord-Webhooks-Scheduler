@@ -1,7 +1,7 @@
 import { API_URL } from './config';
 
 export const getWebhooksForUser = async (userId) => {
-    const response = await fetch(`${API_URL}/schedule/${userId}`);
+    const response = await fetch(`${API_URL}/schedule/${userId}`, { credentials: 'include' });
     if (!response.ok) {
       throw new Error('Failed to fetch webhooks');
     }
@@ -12,6 +12,7 @@ export const getWebhooksForUser = async (userId) => {
   export const deleteWebhook = async (id) => {
     const response = await fetch(`${API_URL}/schedule/${id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
     if (!response.ok) {
       throw new Error('Failed to delete webhook');
@@ -21,6 +22,7 @@ export const getWebhooksForUser = async (userId) => {
   export const addWebhook = async (webhook) => {
     const response = await fetch(`${API_URL}/schedule`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

@@ -280,7 +280,7 @@ const MainSection = () => {
             <h2>Schedule a webhook</h2>
             <p>Webhook URL</p>
             <div className="row">
-                <input type='text' placeholder='Webhook URL' value={isWHFocused ? webhook : getMaskedValue(webhook)} onChange={e => setWebhook(e.target.value)} onFocus={() => setWHIsFocused(true)} />
+                <input type='text' placeholder='Webhook URL' value={isWHFocused ? webhook : getMaskedValue(webhook)} onChange={e => setWebhook(e.target.value)} onFocus={() => setWHIsFocused(true)} onBlur={() => setWHIsFocused(false)} />
                 <button onClick={scheduleWebhook}>Schedule</button>
                 <button className='green' onClick={sendWebhook}>Send Now</button>
             </div>

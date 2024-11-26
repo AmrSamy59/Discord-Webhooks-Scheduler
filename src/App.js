@@ -63,8 +63,12 @@ function App() {
           }
       };
 
+      if(user) {
+        console.log(user)
+
       _fetchWebhooks();
-  }, [needFetch]);
+      }
+  }, [needFetch, user]);
 
   const fetchWebhooks = () => {
     setNeedFetch(needFetch + 1);
