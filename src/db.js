@@ -23,9 +23,6 @@ export const getWebhooksForUser = async (userId) => {
     const response = await fetch(`${API_URL}/schedule`, {
       method: 'POST',
       credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify(webhook),
     });
     if (!response.ok) {
