@@ -24,6 +24,9 @@ export const getWebhooksForUser = async (userId) => {
       method: 'POST',
       credentials: 'include',
       body: JSON.stringify(webhook),
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     if (!response.ok) {
       throw new Error('Failed to add webhook');

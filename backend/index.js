@@ -24,8 +24,12 @@ const s3 = new AWS.S3();
 const app = express();
 const port = 3000;
 
-app.use(cors()); // Enable CORS for all routes
-app.options('*', cors()); // Enable pre-flight
+const CCORS = cors({ origin: process.env.APP_URL, credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'DELETE']
+ });
+app.use(CCORS);
+app.options(process.env.APP_URL, CCORS); // Enable pre-flight
 app.use(express.json());
 app.use(fileUpload());
 
@@ -128,7 +132,8 @@ app.post('/api/check_webhooks', async (req, res) => {
 
 const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
 
-app.use(cors({ origin: process.env.APP_URL, credentials: true }));
+
+
 app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
 app.use(cookieParser());
 
@@ -216,6 +221,7 @@ app.post('/api/upload', (req, res) => {
 // Schedule a new webhook
 app.post('/api/schedule', async (req, res) => {
     const { time, webhook_url, message, fileUrl } = req.body;
+    console.log(req.body)
     const user_id = req.user.id;
     try {
       const result = await pool.query(
