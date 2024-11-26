@@ -26,6 +26,7 @@ const port = 3000;
 
 app.use(bodyParser.json());
 app.use(cors()); // Enable CORS for all routes
+app.options('*', cors()); // Enable pre-flight
 app.use(fileUpload());
 
 const pool = new Pool({

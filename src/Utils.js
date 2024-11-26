@@ -12,6 +12,7 @@ export const uploadFile = async (file) => {
     const response = await fetch(`${API_URL}/upload`, { // Adjust the endpoint
         method: 'POST',
         body: formData,
+        credentials: 'include',
     });
     if (!response.ok) {
         throw new Error('Failed to upload file');
