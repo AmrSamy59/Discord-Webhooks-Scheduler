@@ -18,6 +18,7 @@ const MainSection = () => {
     const [fetchedName, setFetchedName] = useState(null);
     const [fetchedAvatar, setFetchedAvatar] = useState(null);
     const [schedTime, setSchedTime] = useState(null);
+    const [isWHFocused, setWHIsFocused] = useState(false);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -271,12 +272,15 @@ const MainSection = () => {
             console.error(err);
         })
     }
+
+    const getMaskedValue = (value) => "*".repeat(value.length);
+
     return (
         <div>
             <h2>Schedule a webhook</h2>
             <p>Webhook URL</p>
             <div className="row">
-                <input type='text' placeholder='Webhook URL' value={webhook} onChange={e => setWebhook(e.target.value)} />
+                <input type='text' placeholder='Webhook URL' value={isWHFocused ? webhook : getMaskedValue(webhook)} onChange={e => setWebhook(e.target.value)} onFocus={() => setWHIsFocused(true)} />
                 <button onClick={scheduleWebhook}>Schedule</button>
                 <button className='green' onClick={sendWebhook}>Send Now</button>
             </div>
