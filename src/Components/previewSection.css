@@ -83,3 +83,20 @@ div.msgFile {
   text-decoration: none;
   cursor: pointer;
 }
+
+.rendered-emoji {
+  display: inline-block;
+  vertical-align: middle;
+  width: 1em;
+  height: 1em;
+  -webkit-user-drag: none;
+}
+.rendered-mention {
+  cursor: pointer;
+  color: rgb(222, 224, 252);
+  font-weight: 500;
+  border-radius: 3px;
+  padding: 0px 2px;
+  background: rgba(88, 101, 242, 0.3);
+  transition: background-color 50ms ease-out, color;
+}

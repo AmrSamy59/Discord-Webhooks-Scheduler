@@ -6,6 +6,7 @@ import { Context } from '../App';
 import toast from 'react-hot-toast';
 import { addWebhook } from '../db';
 import { getTimeZone, uploadFile } from '../Utils';
+import { useDropzone } from "react-dropzone";
 
 const MainSection = () => {
     const { userName, setUserName, avatarURL, 
@@ -19,6 +20,23 @@ const MainSection = () => {
     const [fetchedAvatar, setFetchedAvatar] = useState(null);
     const [schedTime, setSchedTime] = useState(null);
     const [isWHFocused, setWHIsFocused] = useState(false);
+
+    const onDrop = (acceptedFiles) => {
+        if(acceptedFiles[0].size > 25000000)
+        {
+            toast('File size too large', {icon: '❌'});
+            acceptedFiles = null;
+            setFileKey(fileKey + 1);
+            setFile(undefined);
+            return;
+        }
+        setFile(acceptedFiles[0]);
+    };
+
+    const { getRootProps, getInputProps } = useDropzone({
+        onDrop,
+        maxFiles: 1, // Restrict to a single file
+    });
 
     useEffect(() => {
         const controller = new AbortController();
@@ -190,6 +208,9 @@ const MainSection = () => {
 
                 }
             toast('Webhook sent successfully', {icon: '✅'});
+            if(res.status === 204)
+                return;
+            
             return res.json();
 
         }).then(data => {
@@ -310,8 +331,26 @@ const MainSection = () => {
             <hr />
             <p>Add File <span className='smol'><i>Max 25MB</i></span></p>
             <div className="row">
-                <input type='file' onChange={onFileChange} key={fileKey} />
-                <button className='red' onClick={clearFile}>Clear</button>
+            <div
+            {...getRootProps()}
+            style={{
+                border: "2px dashed #007bff",
+                borderRadius: "8px",
+                padding: "20px",
+                textAlign: "center",
+                cursor: "pointer",
+            }}
+        >
+            <input {...getInputProps()}  key={fileKey} />
+            Drag your file here, or click to browse.
+            {file && (
+                <div>
+                    <h3><strong>Uploaded File:</strong></h3>
+                    <p>{file.name}</p>
+                </div>
+            )}
+        </div>
+                <button className='red' onClick={clearFile} style={{margin:"5px"}}>Clear</button>
             </div>
             <hr />
             <p>Embeds</p>
