@@ -35,8 +35,8 @@ function App() {
   }, []);
 
   
-  let defaultUser = 'Gat';
-  let defaultAvatar = 'https://cdn.discordapp.com/avatars/271026539007574018/15af0dcf2578aef01a5e103457251f51.gif?size=1024';
+  let defaultUser = 'Test Webhook';
+  let defaultAvatar = 'https://cdn.discordapp.com/embed/avatars/0.png';
 
   const [userName, setUserName] = useState(defaultUser);
   const [avatarURL, setAvatarURL] = useState(defaultAvatar);
