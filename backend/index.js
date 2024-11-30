@@ -22,7 +22,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 const app = express();
-const port = 443;
+const port = 3000;
 
 const CCORS = cors({ origin: process.env.APP_URL, credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
