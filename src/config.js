@@ -1,1 +1,1 @@
-export const API_URL = 'http://backend.ancient.systems:3000/api';
+export const API_URL = 'https://backend.ancient.systems/api';
