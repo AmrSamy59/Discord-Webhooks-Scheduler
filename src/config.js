@@ -1,1 +1,1 @@
-export const API_URL = 'https://discord-webhooks-scheduler-backend.vercel.app/api';
+export const API_URL = 'http://backend.ancient.systems:3000/api';
