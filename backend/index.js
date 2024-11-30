@@ -50,12 +50,8 @@ pool.connect((err) => {
 
 // routes with no authentication
 
-app.post('/api/check_webhooks', async (req, res) => {
-  const key = req.headers['x-api-key'];
-  if (key !== process.env.SECRET_KEY) {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-
+// cron job to check for webhooks every minute on second 2
+cron.schedule('2 * * * * *', async () => {
   const sentWebhooks = [];
   const failedWebhooks = [];
   
@@ -112,17 +108,15 @@ app.post('/api/check_webhooks', async (req, res) => {
     // Commit transaction
     await pool.query('COMMIT');
 
-    res.status(200).json({ sentWebhooks, failedWebhooks });
-
+    console.log('Webhooks sent:', sentWebhooks, 'Webhooks failed:', failedWebhooks);
   } catch (err) {
-    console.error('Error processing webhooks', err.message);
+    console.error('Error processing webhooks', err.message, sentWebhooks, failedWebhooks);
 
     // Rollback transaction in case of error
     await pool.query('ROLLBACK');
-
-    res.status(500).json({ error: err.message, sentWebhooks, failedWebhooks });
   }
 });
+
 
 
 
