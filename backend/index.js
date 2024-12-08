@@ -30,8 +30,8 @@ const CCORS = cors({ origin: process.env.APP_URL, credentials: true,
  });
 app.use(CCORS);
 app.options(process.env.APP_URL, CCORS); // Enable pre-flight
-app.use(express.json());
-app.use(fileUpload());
+app.use(express.json({ limit: '25mb' }));
+app.use(fileUpload({ limit: '25mb' }));
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
