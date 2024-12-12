@@ -124,7 +124,11 @@ cron.schedule('2 * * * * *', async () => {
 
 ////////////// discord auth
 
-const WHITELISTED_IDS = ['271026539007574018', '132215959023779842'];
+const WHITELISTED_IDS = [
+  '271026539007574018', // gat
+  '132215959023779842', // kim
+  '969506800808366110', // molly
+];
 
 
 
