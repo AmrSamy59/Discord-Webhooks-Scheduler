@@ -2,11 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
 const axios = require('axios');
-const { Pool } = require('pg');
 const cors = require('cors');
 const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+
+const pool = require('./db');
 
 require('dotenv').config();
 
@@ -32,21 +33,6 @@ app.use(CCORS);
 app.options(process.env.APP_URL, CCORS); // Enable pre-flight
 app.use(express.json({ limit: '25mb' }));
 app.use(fileUpload({ limit: '25mb' }));
-
-const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
-pool.connect((err) => {
-  if (err) {
-    console.error('Database connection error', err.stack);
-  } else {
-    console.log('Database connected');
-  }
-});
 
 // routes with no authentication
 
