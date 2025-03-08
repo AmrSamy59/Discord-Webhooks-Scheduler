@@ -157,6 +157,6 @@ const shutdown = async () => {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
-d
+
 // Export query function for potential use elsewhere
 module.exports = { query };
